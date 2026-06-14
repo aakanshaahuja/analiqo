@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="w-full">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-display font-extrabold text-slate-900 mb-1 tracking-tight">Analytics & Reports</h1>
+        <p class="text-slate-600 font-medium text-sm">Aggregated market intelligence and competitor analytics across your tracked portfolio.</p>
+    </div>
+
+    <!-- Charts and Volatility Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Buy Box Share Chart -->
+        <div class="solid-panel p-6 rounded-2xl lg:col-span-2 relative overflow-hidden flex flex-col justify-between">
+            <div>
+                <h2 class="text-xl font-display font-extrabold mb-2 text-slate-900 flex items-center gap-2">
+                    <div class="w-2 h-6 rounded-full bg-brand-500"></div>
+                    Buy Box Win Share
+                </h2>
+                <p class="text-xs text-slate-500 font-bold mb-6">Distribution of Buy Box wins across detected competitor stores.</p>
+            </div>
+            <div class="relative h-72 w-full flex items-center justify-center">
+                <canvas id="buyboxChart" data-chart-values="{{ buybox_chart_data|escape }}"></canvas>
+            </div>
+        </div>
+
+        <!-- Price Volatility Card -->
+        <div class="solid-panel p-6 rounded-2xl relative overflow-hidden flex flex-col">
+            <div>
+                <h2 class="text-xl font-display font-extrabold mb-2 text-slate-900 flex items-center gap-2">
+                    <div class="w-2 h-6 rounded-full bg-yellow-500"></div>
+                    Price Volatility Index
+                </h2>
+                <p class="text-xs text-slate-500 font-bold mb-6">SKUs with the highest frequency of competitor repricing (last 7 days).</p>
+            </div>
+            
+            <div class="flex-1">
+                {% if volatile_skus %}
+                <div class="space-y-4">
+                    {% for sku in volatile_skus %}
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between hover:border-brand-200 transition-colors">
+                        <div class="min-w-0 flex-1">
+                            <a href="{% url 'sku_detail' sku.pk %}" class="text-sm font-extrabold text-slate-900 hover:text-brand-600 truncate block">
+                                {{ sku.name }}
+                            </a>
+                            <span class="text-[10px] font-mono font-bold text-slate-400">PID: {{ sku.pid }}</span>
+                        </div>
+                        <div class="text-right ml-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-extrabold bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                {{ sku.log_count }} updates
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12 text-slate-400 font-bold text-sm">
+                    No repricing activity logged in the past week.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Competitor Directory -->
+    <div class="solid-panel p-6 rounded-2xl mb-8 relative overflow-hidden">
+        <h2 class="text-xl font-display font-extrabold mb-2 text-slate-900 flex items-center gap-2">
+            <div class="w-2 h-6 rounded-full bg-brand-400"></div>
+            Competitor Directory
+        </h2>
+        <p class="text-xs text-slate-500 font-bold mb-6">Summary profiles of all unique sellers competing on your tracked listings.</p>
+
+        {% if competitors %}
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="min-w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Competitor Name</th>
+                        <th class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Average Rating</th>
+                        <th class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Product Overlap</th>
+                        <th class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Total Scraped Price Logs</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for comp in competitors %}
+                    <tr class="hover:bg-slate-50 transition-colors duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                                    {{ comp.seller_name|make_list|first|upper }}
+                                </div>
+                                <span class="text-sm font-extrabold text-slate-900">{{ comp.seller_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if comp.avg_rating %}
+                            <div class="flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-md inline-flex shadow-sm">
+                                <svg class="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <span class="text-xs font-bold text-slate-700">{{ comp.avg_rating }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-slate-400 font-bold text-sm">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-extrabold text-slate-900">{{ comp.sku_count }} SKUs</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-extrabold text-slate-900 font-mono">{{ comp.log_count }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-slate-400 font-bold text-sm">
+            No competitor data gathered yet.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pie Chart script integration -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('buyboxChart');
+        if (canvas && canvas.dataset.chartValues) {
+            const data = JSON.parse(canvas.dataset.chartValues);
+            
+            // Check if we have data to draw
+            if (!data.labels || data.labels.length === 0) {
+                const ctx = canvas.getContext('2d');
+                ctx.font = '14px Inter';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.fillText('No Buy Box winners tracked yet', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Buy Box Wins',
+                        data: data.wins,
+                        backgroundColor: [
+                            '#ec4899', // brand pink
+                            '#f472b6',
+                            '#fbcfe8',
+                            '#be185d',
+                            '#831843',
+                            '#3b82f6', // blue accents
+                            '#60a5fa',
+                            '#93c5fd',
+                            '#cbd5e1',
+                            '#94a3b8'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    weight: 'bold',
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#ffffff',
+                            bodyColor: '#cbd5e1',
+                            padding: 12,
+                            titleFont: { family: "'Inter', sans-serif", weight: 'bold' },
+                            bodyFont: { family: "'Inter', sans-serif", weight: 'bold' }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

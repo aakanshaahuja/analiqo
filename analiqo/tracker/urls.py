@@ -1,9 +1,16 @@
 from django.urls import path
-from .views import DashboardView, AddSKUView, SKUDetailView, SKUSyncView
+from .views import (
+    LandingView, LogoutView, DashboardView, AddSKUView, 
+    SKUDetailView, SKUSyncView, AnalyticsView, MarkNotificationReadView
+)
 
 urlpatterns = [
-    path('', DashboardView.as_view(), name='dashboard'),
+    path('', LandingView.as_view(), name='landing'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('add/', AddSKUView.as_view(), name='add_sku'),
     path('sku/<int:pk>/', SKUDetailView.as_view(), name='sku_detail'),
     path('sku/<int:pk>/sync/', SKUSyncView.as_view(), name='sku_sync'),
+    path('analytics/', AnalyticsView.as_view(), name='analytics'),
+    path('notifications/mark-read/<int:pk>/', MarkNotificationReadView.as_view(), name='mark_notification_read'),
 ]

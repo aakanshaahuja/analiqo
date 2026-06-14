@@ -54,6 +54,95 @@
         </div>
     </div>
 
+    <!-- Key Metrics & Pricing Health Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Pricing Health Status Card -->
+        <div class="solid-panel rounded-2xl p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md border-l-4 
+            {% if detailed_sellers.0.final_price < sku.floor_price %}border-l-red-500 bg-red-50/20
+            {% elif not detailed_sellers.0.has_buybox %}border-l-yellow-500 bg-yellow-50/20
+            {% else %}border-l-emerald-500 bg-emerald-50/20{% endif %}">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">Pricing Health</p>
+                    <h3 class="text-2xl font-display font-extrabold">
+                        {% if detailed_sellers.0.final_price < sku.floor_price %}
+                            <span class="text-red-600 font-extrabold">Breached</span>
+                        {% elif not detailed_sellers.0.has_buybox %}
+                            <span class="text-yellow-600 font-extrabold">Undercut</span>
+                        {% else %}
+                            <span class="text-emerald-600 font-extrabold">Healthy</span>
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="p-2 rounded-lg 
+                    {% if detailed_sellers.0.final_price < sku.floor_price %}bg-red-100 text-red-600
+                    {% elif not detailed_sellers.0.has_buybox %}bg-yellow-100 text-yellow-600
+                    {% else %}bg-emerald-100 text-emerald-600{% endif %}">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {% if detailed_sellers.0.final_price < sku.floor_price %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% endif %}
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-slate-600 mt-3 font-semibold">
+                {% if detailed_sellers.0.final_price < sku.floor_price %}
+                    Competitor pricing has dropped below your floor price of ₹{{ sku.floor_price }}!
+                {% elif not detailed_sellers.0.has_buybox %}
+                    You do not have the Buy Box, but lowest competitor is above floor.
+                {% else %}
+                    You have the Buy Box with a healthy price.
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Floor Price Card -->
+        <div class="solid-panel rounded-2xl p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">Your Floor Price</p>
+                    <h3 class="text-3xl font-display font-extrabold text-slate-900">₹{{ sku.floor_price }}</h3>
+                </div>
+                <div class="p-3 bg-brand-50 rounded-xl text-brand-500">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4 font-semibold">Minimum allowed selling price</p>
+        </div>
+
+        <!-- Current Lowest Competitor Card -->
+        <div class="solid-panel rounded-2xl p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">Lowest Competitor</p>
+                    <h3 class="text-3xl font-display font-extrabold text-slate-900">
+                        {% if detailed_sellers %}
+                            ₹{{ detailed_sellers.0.final_price }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="p-3 bg-slate-50 text-slate-600 rounded-xl">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-4 font-semibold">
+                {% if detailed_sellers %}
+                    Sold by: <span class="font-bold text-slate-700">{{ detailed_sellers.0.seller_name }}</span>
+                {% else %}
+                    No seller data available
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
     <!-- Chart.js Container -->
     <div class="solid-panel p-6 rounded-2xl mb-8 relative overflow-hidden">
         <h2 class="text-xl font-display font-extrabold mb-6 text-slate-900 flex items-center gap-2">

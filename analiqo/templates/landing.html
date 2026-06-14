@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analiqo | E-commerce Competitor Pricing Intelligence</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <style>
+        .glow-overlay {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0) 70%);
+            top: -100px;
+            left: -100px;
+            pointer-events: none;
+            filter: blur(50px);
+        }
+        .glow-overlay-right {
+            position: absolute;
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 70%);
+            bottom: -150px;
+            right: -150px;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+        .animated-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-slate-100 font-sans min-h-screen flex items-center justify-center relative overflow-x-hidden antialiased">
+
+    <!-- Decorative glows -->
+    <div class="glow-overlay"></div>
+    <div class="glow-overlay-right"></div>
+
+    <div class="w-full max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 relative z-10 min-h-[90vh] flex flex-col justify-center">
+        <!-- Logo Header -->
+        <div class="flex items-center gap-3 mb-10 self-start">
+            <div class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <div class="font-display font-black text-2xl tracking-wide text-white">
+                ANALIQO<span class="text-brand-500">.</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            
+            <!-- Left Info Panel -->
+            <div class="lg:col-span-7 space-y-8">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-bold uppercase tracking-wider animate-pulse">
+                    🚀 Real-time Price Intelligence
+                </div>
+                
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold text-white tracking-tight leading-none">
+                    Never Lose the <br>
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-pink-600">Flipkart Buy Box</span> Again.
+                </h1>
+                
+                <p class="text-lg text-slate-400 max-w-2xl leading-relaxed font-medium">
+                    Analiqo monitors competitor price logs, alerts you instantly upon floor breaches, and generates deep market reports to keep your listings highly optimized.
+                </p>
+
+                <!-- Features list -->
+                <div class="space-y-4 max-w-lg">
+                    <div class="flex items-start gap-3.5">
+                        <div class="mt-1 w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Rome API Price Tracker</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">Collects precise pricing metadata from Flipkart's core listings engine.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3.5">
+                        <div class="mt-1 w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Floor Price Protection Alerts</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">Instant notification logs if a competitor violates your custom set limits.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3.5">
+                        <div class="mt-1 w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Market Share Distribution</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">Beautiful reports displaying Buy Box shares, average rating overlays, and volatility logs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Glassmorphism Form Card -->
+            <div class="lg:col-span-5 w-full max-w-md mx-auto" x-data="{ tab: '{{ active_tab }}' }">
+                
+                <!-- Display Django Messages inside the Card -->
+                {% if messages %}
+                <div class="mb-6 space-y-3">
+                    {% for message in messages %}
+                    <div class="p-4 rounded-xl border flex items-center gap-3 text-xs font-bold leading-normal
+                        {% if message.tags == 'error' %}bg-red-500/10 border-red-500/20 text-red-400
+                        {% else %}bg-brand-500/10 border-brand-500/20 text-brand-400{% endif %}">
+                        <p>{{ message }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Main Glass Card -->
+                <div class="bg-slate-900/60 border border-slate-700/50 rounded-3xl shadow-2xl backdrop-blur-xl p-8 relative overflow-hidden">
+                    <div class="animated-grid absolute inset-0 opacity-[0.02] pointer-events-none"></div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex border-b border-slate-700/50 mb-8 p-1 bg-slate-800/40 rounded-xl relative z-10">
+                        <button @click="tab = 'login'" 
+                                :class="tab === 'login' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-slate-400 hover:text-slate-200'"
+                                class="flex-1 text-center py-2.5 rounded-lg text-sm font-bold transition-all duration-300 focus:outline-none">
+                            Sign In
+                        </button>
+                        <button @click="tab = 'signup'" 
+                                :class="tab === 'signup' ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' : 'text-slate-400 hover:text-slate-200'"
+                                class="flex-1 text-center py-2.5 rounded-lg text-sm font-bold transition-all duration-300 focus:outline-none">
+                            Create Account
+                        </button>
+                    </div>
+
+                    <!-- Sign In Form -->
+                    <div x-show="tab === 'login'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="relative z-10">
+                        <h3 class="text-xl font-display font-extrabold text-white mb-2">Welcome back</h3>
+                        <p class="text-xs text-slate-400 mb-6 font-medium">Log in to check your pricing dashboard.</p>
+                        
+                        <form method="POST" action="{% url 'landing' %}" class="space-y-5">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="login">
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                {{ login_form.email }}
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
+                                {{ login_form.password }}
+                            </div>
+                            
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-6 py-3.5 text-sm font-bold text-white bg-brand-500 rounded-xl hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-lg shadow-brand-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2">
+                                Sign In
+                                <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Sign Up Form -->
+                    <div x-show="tab === 'signup'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;" class="relative z-10">
+                        <h3 class="text-xl font-display font-extrabold text-white mb-2">Start Tracking for Free</h3>
+                        <p class="text-xs text-slate-400 mb-6 font-medium">Create your email-only account. No verification required.</p>
+                        
+                        <form method="POST" action="{% url 'landing' %}" class="space-y-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="signup">
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                {{ signup_form.email }}
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
+                                {{ signup_form.password }}
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Confirm Password</label>
+                                {{ signup_form.confirm_password }}
+                            </div>
+                            
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-6 py-3.5 text-sm font-bold text-white bg-brand-500 rounded-xl hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-lg shadow-brand-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-2">
+                                Create Account
+                                <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
