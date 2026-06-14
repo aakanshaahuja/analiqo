@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="w-full">
+    
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-8 space-y-3">
+        {% for message in messages %}
+        <div class="solid-panel p-4 rounded-xl flex items-center gap-3 border-l-4 
+            {% if message.tags == 'error' %}border-l-red-500 bg-red-50 text-red-900
+            {% elif message.tags == 'warning' %}border-l-yellow-500 bg-yellow-50 text-yellow-900
+            {% else %}border-l-brand-500 bg-brand-50 text-brand-900{% endif %}">
+            <p class="text-sm font-bold">{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Header & Actions -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+        <div>
+            <a href="{% url 'dashboard' %}" class="group text-slate-500 hover:text-brand-600 text-sm font-extrabold mb-3 inline-flex items-center transition-colors">
+                <div class="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mr-2 group-hover:bg-brand-50 group-hover:border-brand-200 transition-colors">
+                    <svg class="h-3 w-3 text-slate-500 group-hover:text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </div>
+                Back to Trackers
+            </a>
+            <h1 class="text-3xl font-display font-extrabold text-slate-900 tracking-tight leading-tight">{{ sku.name }}</h1>
+            <div class="flex items-center gap-3 mt-2">
+                <span class="px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-mono font-bold text-slate-600 shadow-sm">PID: {{ sku.pid }}</span>
+                <span class="px-2 py-1 bg-white border border-slate-200 rounded-md text-xs font-mono font-bold text-slate-600 shadow-sm">LID: {{ sku.lid }}</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3 w-full md:w-auto">
+            <a href="{{ sku.target_url }}" target="_blank" class="w-full md:w-auto inline-flex justify-center items-center bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 px-5 py-2.5 rounded-xl shadow-sm transition-colors text-sm font-extrabold">
+                View on Flipkart
+                <svg class="w-4 h-4 ml-2 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+            </a>
+            <form method="POST" action="{% url 'sku_sync' sku.pk %}" class="w-full md:w-auto m-0">
+                {% csrf_token %}
+                <button type="submit" class="w-full md:w-auto inline-flex justify-center items-center bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-xl shadow-sm transition-colors text-sm font-extrabold">
+                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Re-Sync Now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chart.js Container -->
+    <div class="solid-panel p-6 rounded-2xl mb-8 relative overflow-hidden">
+        <h2 class="text-xl font-display font-extrabold mb-6 text-slate-900 flex items-center gap-2">
+            <div class="w-2 h-6 rounded-full bg-brand-400"></div>
+            Buy Box Price Trend
+        </h2>
+        <div class="relative h-80 w-full">
+            <canvas id="priceChart" data-chart-values="{{ chart_data_json|escape }}"></canvas>
+        </div>
+    </div>
+
+    <!-- Detailed Seller Report -->
+    <div class="solid-panel p-6 rounded-2xl mb-12 relative overflow-hidden">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 relative z-10">
+            <h2 class="text-xl font-display font-extrabold text-slate-900 flex items-center gap-2">
+                <div class="w-2 h-6 rounded-full bg-brand-500"></div>
+                Live Sellers Comparison
+            </h2>
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 shadow-sm">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span class="text-xs font-bold text-slate-600">Synced: <span class="text-slate-900">{{ sku.last_fetched_at|date:"M d, H:i"|default:"Never" }}</span></span>
+            </div>
+        </div>
+        
+        {% if detailed_sellers %}
+        <div class="overflow-x-auto relative z-10 rounded-xl border border-slate-200">
+            <table class="min-w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Seller Name</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Rating</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Final Price</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">MRP</th>
+                        <th scope="col" class="px-6 py-4 text-xs font-extrabold text-slate-600 uppercase tracking-wider">Buy Box Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    {% for seller in detailed_sellers %}
+                    <tr class="transition-colors duration-200 {% if seller.has_buybox %}bg-brand-50/50 hover:bg-brand-50{% else %}hover:bg-slate-50{% endif %}">
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                                    {{ seller.seller_name|make_list|first|upper }}
+                                </div>
+                                <span class="text-sm font-extrabold {% if seller.has_buybox %}text-brand-700{% else %}text-slate-900{% endif %}">
+                                    {{ seller.seller_name }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            {% if seller.seller_rating %}
+                                <div class="flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-md inline-flex shadow-sm">
+                                    <svg class="w-3.5 h-3.5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                    <span class="text-xs font-bold text-slate-700">{{ seller.seller_rating }}</span>
+                                </div>
+                            {% else %}
+                                <span class="text-slate-400 font-bold text-sm">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <span class="text-base font-display font-extrabold {% if seller.has_buybox %}text-brand-600{% else %}text-slate-900{% endif %}">
+                                ₹{{ seller.final_price }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap text-sm font-bold text-slate-400 line-through">
+                            {% if seller.mrp %}₹{{ seller.mrp }}{% else %}-{% endif %}
+                        </td>
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            {% if seller.has_buybox %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-brand-100 text-brand-700 border border-brand-200">
+                                <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Winner
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400 font-bold text-sm">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-16">
+            <div class="w-20 h-20 rounded-full bg-slate-50 mx-auto flex items-center justify-center mb-4 border border-slate-200">
+                <svg class="h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <p class="text-base font-extrabold text-slate-800">No active sellers found</p>
+            <p class="text-sm font-bold text-slate-500 mt-1">Try hitting the Re-Sync button above.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Chart.js setup with high contrast light pink theme -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('priceChart');
+            if (canvas && canvas.dataset.chartValues) {
+                const data = JSON.parse(canvas.dataset.chartValues);
+                
+                // Create gradient for the chart
+                const ctx = canvas.getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(236, 72, 153, 0.3)');   // Brand 500
+                gradient.addColorStop(1, 'rgba(236, 72, 153, 0.0)');
+
+                Chart.defaults.color = '#475569'; // slate-600
+                Chart.defaults.font.family = "'Inter', sans-serif";
+                
+                new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Buy Box Price (₹)',
+                            data: data.prices,
+                            borderColor: '#ec4899', // Brand 500
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#ec4899',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#ec4899',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1e293b', // slate-800
+                                titleColor: '#ffffff',
+                                bodyColor: '#cbd5e1', // slate-300
+                                padding: 12,
+                                borderColor: 'rgba(255, 255, 255, 0.1)',
+                                borderWidth: 1,
+                                displayColors: false,
+                                titleFont: { family: "'Inter', sans-serif", weight: 'bold' },
+                                bodyFont: { family: "'Inter', sans-serif", weight: 'bold' },
+                                callbacks: {
+                                    label: function(context) {
+                                        return '₹ ' + context.parsed.y;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                grid: { 
+                                    color: 'rgba(226, 232, 240, 1)', // slate-200
+                                    drawBorder: false
+                                },
+                                border: { display: false },
+                                ticks: { padding: 10, font: { weight: '700' } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                border: { display: false },
+                                ticks: { padding: 10, maxRotation: 45, minRotation: 45, font: { weight: '700' } }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</div>
+{% endblock %}
