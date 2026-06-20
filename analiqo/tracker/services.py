@@ -37,25 +37,65 @@ class FlipkartScraper:
             }
         }
         
-        session = requests.Session()
-        session.headers.update(cls.HEADERS)
+        import undetected_chromedriver as uc
         
+        driver = None
         for attempt in range(cls.MAX_RETRIES):
             try:
-                response = session.post(cls.API_URL, json=payload, timeout=15)
+                options = uc.ChromeOptions()
+                options.add_argument('--headless')
+                options.add_argument('--no-sandbox')
+                options.add_argument('--disable-gpu')
                 
-                if response.status_code == 200:
-                    return cls.parse_sellers_from_response(response.json())
-                elif response.status_code in (403, 429):
-                    time.sleep((2 ** attempt) * 2)
-                    continue
+                driver = uc.Chrome(options=options, version_main=149)
+                driver.get("https://www.flipkart.com")
+                time.sleep(3)
+                
+                js_code = """
+                const callback = arguments[arguments.length - 1];
+                const payload = arguments[0];
+                
+                fetch('https://1.rome.api.flipkart.com/3/page/dynamic/product-sellers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 FKUA/website/42/website/Desktop'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => callback({success: true, data}))
+                .catch(error => callback({success: false, error: error.message}));
+                """
+                
+                driver.set_script_timeout(10)
+                result = driver.execute_async_script(js_code, payload)
+                
+                if result and result.get("success"):
+                    return cls.parse_sellers_from_response(result.get("data"))
                 else:
-                    logger.error(f"API Error {response.status_code} for PID {pid}")
-                    return []
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Request Error for PID {pid}: {e}")
-                time.sleep(2 ** attempt)
-        
+                    err_msg = result.get("error") if result else "No response"
+                    logger.warning(f"Fetch attempt {attempt+1} failed for PID {pid}: {err_msg}")
+                    
+            except Exception as e:
+                logger.error(f"Request Error for PID {pid} (attempt {attempt+1}): {e}")
+                
+            finally:
+                if driver:
+                    try:
+                        driver.quit()
+                    except Exception as q_err:
+                        logger.debug(f"Error quitting driver: {q_err}")
+                    driver = None
+                    
+            time.sleep((2 ** attempt) * 2)
+            
         return []
 
     @classmethod

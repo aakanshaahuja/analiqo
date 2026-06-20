@@ -20,16 +20,16 @@
                     },
                     colors: {
                         brand: {
-                            50: '#fdf2f8',
-                            100: '#fce7f3',
-                            200: '#fbcfe8',
-                            300: '#f9a8d4',
-                            400: '#f472b6',
-                            500: '#ec4899',
-                            600: '#db2777',
-                            700: '#be185d',
-                            800: '#9d174d',
-                            900: '#831843',
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
                         }
                     },
                     boxShadow: {
@@ -69,7 +69,7 @@
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #f472b6; }
+        ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
     </style>
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col selection:bg-brand-200 selection:text-brand-900">
@@ -78,20 +78,21 @@
     <nav class="bg-white sticky top-0 z-40 border-b border-slate-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
+                <a href="{% url 'landing' %}" class="flex items-center gap-3 group">
+                    <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center group-hover:bg-brand-600 transition-colors">
                         <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
-                    <div class="font-display font-bold text-xl tracking-wide text-slate-900">
+                    <div class="font-display font-bold text-xl tracking-wide text-slate-900 group-hover:text-brand-600 transition-colors">
                         ANALIQO<span class="text-brand-500">.</span>
                     </div>
-                </div>
+                </a>
                 <div class="flex items-center space-x-6">
                     {% if user.is_authenticated %}
                         <a href="{% url 'dashboard' %}" class="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Dashboard</a>
                         <a href="{% url 'analytics' %}" class="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Analytics</a>
+                        <a href="{% url 'settings' %}" class="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Settings</a>
                         
                         <div class="h-5 w-px bg-slate-300"></div>
 

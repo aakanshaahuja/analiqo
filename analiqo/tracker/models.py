@@ -59,6 +59,8 @@ class CompetitorPriceLog(models.Model):
 class AlertSetting(models.Model):
     """User preferences for threshold breaches."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='alert_settings')
+    my_seller_name = models.CharField(max_length=255, blank=True, null=True, help_text="Your store name on Flipkart (case-insensitive)")
+    bg_job_frequency = models.PositiveIntegerField(default=24, blank=True, null=True, help_text="Background job frequency in hours")
     email_alerts_enabled = models.BooleanField(default=True)
     dashboard_alerts_enabled = models.BooleanField(default=True)
     # E.g., Alert if competitor price drops below my floor price

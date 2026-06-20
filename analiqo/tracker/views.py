@@ -6,9 +6,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Count, Avg, Q
-from .models import ProductSKU, CompetitorPriceLog, NotificationLog
+from .models import ProductSKU, CompetitorPriceLog, NotificationLog, AlertSetting
 from .services import FlipkartScraper
-from .forms import EmailLoginForm, EmailSignupForm
+from .forms import EmailLoginForm, EmailSignupForm, SettingsForm, SKURulesForm
 
 class DashboardView(LoginRequiredMixin, ListView):
     model = ProductSKU
@@ -181,21 +181,182 @@ class AddSKUView(LoginRequiredMixin, View):
 class AnalyticsView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
+        alert_setting, _ = AlertSetting.objects.get_or_create(user=user)
+        my_seller_name = alert_setting.my_seller_name
         
+        # Initialize default values
+        our_wins_count = 0
+        our_active_listings = 0
+        total_skus = 0
+        optimizable_total = 0
+        pricing_positions = []
+        threats_list = []
+        has_seller_name = False
+        
+        # Chart 1: Buy Box Share
+        buybox_chart_data = None
+        
+        # General Market Data
         # 1. Buy Box Win Distribution across all competitors (top 10)
         buybox_wins = CompetitorPriceLog.objects.filter(
             product_sku__user=user,
             has_buybox=True
         ).values('seller_name').annotate(wins=Count('id')).order_by('-wins')[:10]
         
-        labels = [item['seller_name'] for item in buybox_wins]
-        wins = [item['wins'] for item in buybox_wins]
-        buybox_chart_data = json.dumps({
-            'labels': labels,
-            'wins': wins
+        market_labels = [item['seller_name'] for item in buybox_wins]
+        market_wins = [item['wins'] for item in buybox_wins]
+        market_buybox_chart_data = json.dumps({
+            'labels': market_labels,
+            'wins': market_wins
         })
         
-        # 2. Price Volatility Index (Most price updates in last 7 days)
+        if my_seller_name and my_seller_name.strip():
+            has_seller_name = True
+            clean_name = my_seller_name.strip().lower()
+            
+            # Count our Buy Box wins
+            our_wins_count = CompetitorPriceLog.objects.filter(
+                product_sku__user=user,
+                has_buybox=True,
+                seller_name__iexact=clean_name
+            ).count()
+            
+            # Count other competitors' wins
+            other_wins = CompetitorPriceLog.objects.filter(
+                product_sku__user=user,
+                has_buybox=True
+            ).exclude(seller_name__iexact=clean_name).values('seller_name').annotate(wins=Count('id')).order_by('-wins')[:9]
+            
+            pie_labels = [f"Our Store ({my_seller_name})"] + [item['seller_name'] for item in other_wins]
+            pie_wins = [our_wins_count] + [item['wins'] for item in other_wins]
+            buybox_chart_data = json.dumps({
+                'labels': pie_labels,
+                'wins': pie_wins
+            })
+            
+            # 2. Portfolio Price Position Analysis
+            active_skus = ProductSKU.objects.filter(user=user, is_active=True)
+            total_skus = active_skus.count()
+            
+            threats_dict = {}
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            for sku in active_skus:
+                latest_log = CompetitorPriceLog.objects.filter(product_sku=sku).order_by('-timestamp').first()
+                if latest_log:
+                    # Capture all logs from the same sync (within 5 seconds)
+                    time_threshold = latest_log.timestamp - timedelta(seconds=5)
+                    current_sync_logs = list(CompetitorPriceLog.objects.filter(
+                        product_sku=sku,
+                        timestamp__gte=time_threshold
+                    ).order_by('final_price'))
+                    
+                    if not current_sync_logs:
+                        continue
+                        
+                    # Find our log in the current sync
+                    our_log = next((x for x in current_sync_logs if x.seller_name.strip().lower() == clean_name), None)
+                    # Competitors in this sync (excluding us)
+                    competitors = [x for x in current_sync_logs if x.seller_name.strip().lower() != clean_name]
+                    lowest_competitor = competitors[0] if competitors else None
+                    buybox_winner = next((x for x in current_sync_logs if x.has_buybox), None)
+                    buybox_owner_name = buybox_winner.seller_name if buybox_winner else "Unknown"
+                    
+                    status = "Not Listed"
+                    recommendation = "You are not listed on this product."
+                    price_difference = None
+                    our_price = None
+                    lowest_price = lowest_competitor.final_price if lowest_competitor else None
+                    is_our_buybox = False
+                    opt_val_for_sku = 0
+                    
+                    if our_log:
+                        our_active_listings += 1
+                        our_price = our_log.final_price
+                        is_our_buybox = our_log.has_buybox
+                        
+                        if lowest_competitor:
+                            price_difference = our_price - lowest_competitor.final_price
+                            
+                            if is_our_buybox:
+                                if price_difference < 0:
+                                    status = "Cheapest & Winning"
+                                    # Money left on the table analysis
+                                    # Find next cheapest competitor
+                                    next_cheapest = competitors[0] if competitors else None
+                                    if next_cheapest:
+                                        diff = next_cheapest.final_price - our_price
+                                        if diff > 1:
+                                            opt_val_for_sku = diff - 1
+                                            optimizable_total += opt_val_for_sku
+                                            recommendation = f"Raise price by ₹{opt_val_for_sku} to ₹{next_cheapest.final_price - 1} to maximize margin while retaining Buy Box."
+                                        else:
+                                            recommendation = "You hold the Buy Box at a highly optimized price."
+                                    else:
+                                        recommendation = "You are the only seller. Consider raising price to capture margin."
+                                else:
+                                    status = "Premium Winner"
+                                    recommendation = "Winning the Buy Box despite higher price than competitor."
+                            else: # We don't have the Buy Box
+                                if price_difference <= 0:
+                                    status = "Cheapest but Losing"
+                                    recommendation = "Lowest price but losing Buy Box. Improve rating or delivery speed."
+                                else:
+                                    # We are higher
+                                    target_price = lowest_competitor.final_price
+                                    if target_price >= sku.floor_price:
+                                        status = "Overpriced"
+                                        recommendation = f"Lower price by ₹{price_difference} to ₹{target_price} to compete for the Buy Box."
+                                    else:
+                                        status = "Floor Limit"
+                                        recommendation = f"Lowest price (₹{target_price}) is below your floor price (₹{sku.floor_price}). Pricing rules prevent further matching."
+                        else:
+                            # No competitors, only us listed
+                            status = "Cheapest & Winning"
+                            is_our_buybox = True
+                            recommendation = "No other active sellers. Optimize price for maximum margin."
+                            
+                        # Threat/Undercutter Tracking
+                        if not is_our_buybox and buybox_winner:
+                            comp_name = buybox_winner.seller_name
+                            if comp_name not in threats_dict:
+                                threats_dict[comp_name] = {
+                                    'seller_name': comp_name,
+                                    'rating': buybox_winner.seller_rating,
+                                    'skus_undercutting': 0,
+                                    'total_price_gap': 0
+                                }
+                            threats_dict[comp_name]['skus_undercutting'] += 1
+                            if price_difference:
+                                threats_dict[comp_name]['total_price_gap'] += float(price_difference)
+                                
+                    pricing_positions.append({
+                        'sku': sku,
+                        'our_price': our_price,
+                        'lowest_price': lowest_price,
+                        'status': status,
+                        'price_gap': price_difference,
+                        'buybox_owner': buybox_owner_name,
+                        'is_our_buybox': is_our_buybox,
+                        'recommendation': recommendation,
+                        'opt_val': opt_val_for_sku
+                    })
+            
+            # Format and sort threats list
+            threats_list = list(threats_dict.values())
+            for threat in threats_list:
+                if threat['skus_undercutting'] > 0:
+                    threat['avg_price_gap'] = round(threat['total_price_gap'] / threat['skus_undercutting'], 1)
+                else:
+                    threat['avg_price_gap'] = 0
+            threats_list = sorted(threats_list, key=lambda x: x['skus_undercutting'], reverse=True)[:5]
+            
+        else:
+            # Fallback if no seller name is configured
+            buybox_chart_data = market_buybox_chart_data
+            
+        # Volatility Index (Most price updates in last 7 days)
         from django.utils import timezone
         from datetime import timedelta
         seven_days_ago = timezone.now() - timedelta(days=7)
@@ -204,7 +365,7 @@ class AnalyticsView(LoginRequiredMixin, View):
             log_count=Count('price_logs', filter=Q(price_logs__timestamp__gte=seven_days_ago))
         ).order_by('-log_count')[:5]
         
-        # 3. Competitor Directory
+        # Competitor Directory (General Market Report)
         competitors_data = CompetitorPriceLog.objects.filter(product_sku__user=user).values('seller_name').annotate(
             avg_rating=Avg('seller_rating'),
             log_count=Count('id'),
@@ -216,12 +377,99 @@ class AnalyticsView(LoginRequiredMixin, View):
             if comp['avg_rating']:
                 comp['avg_rating'] = round(comp['avg_rating'], 1)
                 
+        # Status counts for positioning metrics
+        status_counts = {
+            'winning': sum(1 for x in pricing_positions if x['is_our_buybox']),
+            'overpriced': sum(1 for x in pricing_positions if x['status'] == 'Overpriced'),
+            'floor_limit': sum(1 for x in pricing_positions if x['status'] == 'Floor Limit'),
+            'not_listed': sum(1 for x in pricing_positions if x['status'] == 'Not Listed'),
+            'losing_lowest': sum(1 for x in pricing_positions if x['status'] == 'Cheapest but Losing'),
+        }
+        
+        # Get query parameters
+        search_query = request.GET.get('search', '').strip()
+        status_filter = request.GET.get('status', '').strip()
+        
+        # Filter pricing positions
+        filtered_positions = pricing_positions
+        if search_query:
+            filtered_positions = [
+                pos for pos in filtered_positions
+                if search_query.lower() in pos['sku'].name.lower() or search_query.lower() in pos['sku'].pid.lower()
+            ]
+        if status_filter:
+            filtered_positions = [
+                pos for pos in filtered_positions
+                if pos['status'].lower() == status_filter.lower()
+            ]
+            
+        # Paginate
+        from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+        page = request.GET.get('page', 1)
+        paginator = Paginator(filtered_positions, 10)  # Show 10 per page
+        
+        try:
+            pricing_positions_page = paginator.page(page)
+        except PageNotAnInteger:
+            pricing_positions_page = paginator.page(1)
+        except EmptyPage:
+            pricing_positions_page = paginator.page(paginator.num_pages)
+            
+        # Build query parameters string to persist filters in pagination links
+        params = request.GET.copy()
+        if 'page' in params:
+            params.pop('page')
+        querystring = params.urlencode()
+
         context = {
+            'has_seller_name': has_seller_name,
+            'my_seller_name': my_seller_name,
             'buybox_chart_data': buybox_chart_data,
+            'market_buybox_chart_data': market_buybox_chart_data,
             'volatile_skus': volatile_skus,
-            'competitors': competitors_data
+            'competitors': competitors_data,
+            # Seller perspective additions
+            'our_wins_count': our_wins_count,
+            'our_active_listings': our_active_listings,
+            'total_skus': total_skus,
+            'optimizable_total': round(optimizable_total, 2),
+            'pricing_positions': pricing_positions_page,
+            'search_query': search_query,
+            'status_filter': status_filter,
+            'querystring': querystring,
+            'threats': threats_list,
+            'status_counts': status_counts,
         }
         return render(request, 'dashboard/analytics.html', context)
+
+
+class SettingsView(LoginRequiredMixin, View):
+    def get(self, request):
+        alert_setting, _ = AlertSetting.objects.get_or_create(user=request.user)
+        form = SettingsForm(instance=alert_setting)
+        return render(request, 'dashboard/settings.html', {'form': form, 'settings': alert_setting})
+
+    def post(self, request):
+        alert_setting, _ = AlertSetting.objects.get_or_create(user=request.user)
+        form = SettingsForm(request.POST, instance=alert_setting)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Settings updated successfully!")
+            return redirect('settings')
+        return render(request, 'dashboard/settings.html', {'form': form, 'settings': alert_setting})
+
+
+class SKUUpdateRulesView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        from django.shortcuts import get_object_or_404
+        sku = get_object_or_404(ProductSKU, pk=pk, user=request.user)
+        form = SKURulesForm(request.POST, instance=sku)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Pricing rules updated for {sku.name}!")
+        else:
+            messages.error(request, "Failed to update pricing rules. Please check the inputs.")
+        return redirect('sku_detail', pk=pk)
 
 
 class MarkNotificationReadView(LoginRequiredMixin, View):

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="w-full max-w-4xl mx-auto">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-8 space-y-3">
+        {% for message in messages %}
+        <div class="solid-panel p-4 rounded-xl flex items-center gap-3 border-l-4
+            {% if message.tags == 'error' %}border-l-red-500 bg-red-50 text-red-900
+            {% else %}border-l-brand-500 bg-brand-50 text-brand-900{% endif %}">
+            <svg class="w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-sm font-bold">{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Header Area -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-display font-extrabold text-slate-900 mb-1 tracking-tight">Account & Store Settings</h1>
+        <p class="text-slate-600 font-medium text-sm">Configure your seller credentials and alert rules to enable customized intelligence reports.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Settings Form Section -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="solid-panel p-8 rounded-2xl bg-white shadow-sm border border-slate-200">
+                <h2 class="text-lg font-display font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Flipkart Integration & Preferences
+                </h2>
+
+                <form method="POST" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Seller Name Input -->
+                    <div>
+                        <label for="id_my_seller_name" class="block text-sm font-bold text-slate-800 mb-2">Flipkart Seller Name</label>
+                        {{ form.my_seller_name }}
+                        <p class="mt-2 text-xs font-semibold text-slate-500">
+                            Enter your store's display name on Flipkart (case-insensitive). The app uses this exact name to filter price logs and calculate your Buy Box share.
+                        </p>
+                    </div>
+
+                    <div class="h-px bg-slate-200 my-6"></div>
+
+                    <!-- Background Job Frequency Input -->
+                    <div>
+                        <label for="id_bg_job_frequency" class="block text-sm font-bold text-slate-800 mb-2">Background Job Frequency (Hours)</label>
+                        {{ form.bg_job_frequency }}
+                        {% if form.bg_job_frequency.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.bg_job_frequency.errors.as_text }}</p>
+                        {% endif %}
+                        <p class="mt-2 text-xs font-semibold text-slate-500">
+                            Specify how often (in hours) the background job should fetch competitor prices for your tracked SKUs.
+                        </p>
+                    </div>
+
+                    <div class="h-px bg-slate-200 my-6"></div>
+
+                    <!-- Alerts & Notifications -->
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-4">Notification Settings</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Dashboard Alerts -->
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    {{ form.dashboard_alerts_enabled }}
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="id_dashboard_alerts_enabled" class="font-bold text-slate-800">Enable Dashboard Alerts</label>
+                                    <p class="text-xs font-semibold text-slate-500">Display warning badges and log entry updates directly on your dashboard.</p>
+                                </div>
+                            </div>
+
+                            <!-- Email Alerts -->
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    {{ form.email_alerts_enabled }}
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="id_email_alerts_enabled" class="font-bold text-slate-800">Enable Email Notifications</label>
+                                    <p class="text-xs font-semibold text-slate-500">Receive instant email digests when competitor prices trigger rules.</p>
+                                </div>
+                            </div>
+
+                            <!-- Alert on Undercut -->
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    {{ form.alert_on_undercut }}
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="id_alert_on_undercut" class="font-bold text-slate-800">Alert on Competitor Undercut</label>
+                                    <p class="text-xs font-semibold text-slate-500">Trigger warnings if another seller lists the product below your set floor price.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-6">
+                        <button type="submit" class="w-full inline-flex justify-center items-center px-6 py-3 text-sm font-bold text-white bg-brand-500 rounded-xl hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm transition-all duration-150">
+                            Save Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="space-y-6">
+            <!-- How it works card -->
+            <div class="solid-panel p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider mb-4">Why configure this?</h3>
+                <div class="space-y-4 text-xs font-medium text-slate-600 leading-relaxed">
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold">1</div>
+                        <p><strong class="text-slate-800">Buy Box Analysis:</strong> Configures your win rate percentage vs. your competition in our premium dashboard graphs.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold">2</div>
+                        <p><strong class="text-slate-800">Price Positions:</strong> Highlights whether your store is the cheapest, competitive, overpriced, or locked at floor limit.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold">3</div>
+                        <p><strong class="text-slate-800">Optimal Pricing:</strong> Unlocks "Money Left on the Table" alerts, suggesting exactly when you can raise prices and still win the Buy Box.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Store Status -->
+            <div class="solid-panel p-6 rounded-2xl bg-white border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-900 mb-3">Integration Status</h3>
+                <div class="flex items-center gap-2">
+                    {% if settings.my_seller_name %}
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-sm font-bold text-slate-800">Linked to: <span class="text-brand-600 font-extrabold">{{ settings.my_seller_name }}</span></span>
+                    {% else %}
+                        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+                        <span class="text-sm font-bold text-slate-700">No seller name linked yet</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

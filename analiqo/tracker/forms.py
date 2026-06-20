@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from .models import AlertSetting, ProductSKU
 
 class EmailSignupForm(forms.Form):
     email = forms.EmailField(
@@ -58,3 +59,45 @@ class EmailLoginForm(forms.Form):
             'class': 'w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-sm'
         })
     )
+
+
+class SettingsForm(forms.ModelForm):
+    class Meta:
+        model = AlertSetting
+        fields = ['my_seller_name', 'bg_job_frequency', 'email_alerts_enabled', 'dashboard_alerts_enabled', 'alert_on_undercut']
+        widgets = {
+            'my_seller_name': forms.TextInput(attrs={
+                'placeholder': 'Enter your store name exactly (e.g. RetailNet)',
+                'class': 'w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-sm'
+            }),
+            'bg_job_frequency': forms.NumberInput(attrs={
+                'placeholder': 'Enter frequency in hours (e.g. 24)',
+                'class': 'w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-sm',
+                'min': 1
+            }),
+            'email_alerts_enabled': forms.CheckboxInput(attrs={
+                'class': 'rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4'
+            }),
+            'dashboard_alerts_enabled': forms.CheckboxInput(attrs={
+                'class': 'rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4'
+            }),
+            'alert_on_undercut': forms.CheckboxInput(attrs={
+                'class': 'rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4'
+            }),
+        }
+
+
+class SKURulesForm(forms.ModelForm):
+    class Meta:
+        model = ProductSKU
+        fields = ['base_cost', 'floor_price']
+        widgets = {
+            'base_cost': forms.NumberInput(attrs={
+                'placeholder': 'Enter base cost',
+                'class': 'w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-sm'
+            }),
+            'floor_price': forms.NumberInput(attrs={
+                'placeholder': 'Enter minimum selling price',
+                'class': 'w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-sm'
+            }),
+        }
