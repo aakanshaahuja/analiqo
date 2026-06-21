@@ -107,6 +107,47 @@ class SKUSyncView(LoginRequiredMixin, View):
             messages.error(request, f"Failed to sync data: {str(e)}")
             
         return redirect('sku_detail', pk=pk)
+ 
+class SyncAllView(LoginRequiredMixin, View):
+    def post(self, request):
+        from .tasks import fetch_single_sku
+        active_skus = ProductSKU.objects.filter(user=request.user, is_active=True)
+        
+        if not active_skus.exists():
+            messages.warning(request, "No active products to sync.")
+            return redirect('dashboard')
+            
+        success_count = 0
+        fail_count = 0
+        
+        for sku in active_skus:
+            try:
+                fetch_single_sku(sku.id)
+                success_count += 1
+            except Exception as e:
+                fail_count += 1
+                
+        if success_count > 0:
+            if fail_count > 0:
+                messages.warning(request, f"Synced {success_count} products successfully. Failed to sync {fail_count} products.")
+            else:
+                messages.success(request, f"Successfully synced all {success_count} active products!")
+        else:
+            messages.error(request, f"Failed to sync products. All {fail_count} attempts failed.")
+            
+        return redirect('dashboard')
+ 
+class SKUDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        from django.shortcuts import get_object_or_404
+        sku = get_object_or_404(ProductSKU, pk=pk, user=request.user)
+        name = sku.name
+        try:
+            sku.delete()
+            messages.success(request, f"Successfully deleted and stopped tracking {name}")
+        except Exception as e:
+            messages.error(request, f"Failed to delete product: {str(e)}")
+        return redirect('dashboard')
 
 class AddSKUView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):

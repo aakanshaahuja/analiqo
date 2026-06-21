@@ -6,6 +6,7 @@
                 <th scope="col" class="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider">PID</th>
                 <th scope="col" class="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider">Status</th>
                 <th scope="col" class="px-6 py-4 text-right text-xs font-extrabold text-slate-700 uppercase tracking-wider">Last Fetched</th>
+                <th scope="col" class="px-6 py-4 text-right text-xs font-extrabold text-slate-700 uppercase tracking-wider">Actions</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 bg-white">
@@ -41,10 +42,20 @@
                     <td class="px-6 py-5 whitespace-nowrap text-sm text-slate-500 text-right font-mono text-xs font-bold">
                         {{ sku.last_fetched_at|date:"M d, H:i"|default:"Never" }}
                     </td>
+                    <td class="px-6 py-5 whitespace-nowrap text-right">
+                        <form method="POST" action="{% url 'sku_delete' sku.pk %}" class="inline-block m-0" onsubmit="return confirm('Are you sure you want to stop tracking and delete this product?');">
+                            {% csrf_token %}
+                            <button type="submit" class="p-2 text-slate-400 hover:text-red-600 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500" title="Delete Product">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </form>
+                    </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="4" class="px-6 py-20 text-center">
+                    <td colspan="5" class="px-6 py-20 text-center">
                         <div class="flex flex-col items-center justify-center">
                             <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-200">
                                 <svg class="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

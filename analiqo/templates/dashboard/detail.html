@@ -57,6 +57,15 @@
                     Re-Sync Now
                 </button>
             </form>
+            <form method="POST" action="{% url 'sku_delete' sku.pk %}" class="w-full md:w-auto m-0" onsubmit="return confirm('Are you sure you want to stop tracking and delete this product?');">
+                {% csrf_token %}
+                <button type="submit" class="w-full md:w-auto inline-flex justify-center items-center bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2.5 rounded-xl shadow-sm border border-red-200 transition-colors text-sm font-extrabold whitespace-nowrap">
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Product
+                </button>
+            </form>
         </div>
     </div>
 
@@ -263,9 +272,7 @@
             <p class="text-sm font-bold text-slate-500 mt-1">Try hitting the Re-Sync button above.</p>
         </div>
         {% endif %}
-    </div>
-
-    <!-- Chart.js setup with high contrast light pink theme -->
+      <!-- Chart.js setup with high contrast blue theme -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const canvas = document.getElementById('priceChart');
@@ -277,7 +284,7 @@
                 const gradient = ctx.createLinearGradient(0, 0, 0, 400);
                 gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');   // Brand 500
                 gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
-
+ 
                 Chart.defaults.color = '#475569'; // slate-600
                 Chart.defaults.font.family = "'Inter', sans-serif";
                 
@@ -294,11 +301,11 @@
                             fill: true,
                             tension: 0.4,
                             pointBackgroundColor: '#ffffff',
-                            pointBorderColor: '#ec4899',
+                            pointBorderColor: '#3b82f6',
                             pointBorderWidth: 2,
                             pointRadius: 4,
                             pointHoverRadius: 6,
-                            pointHoverBackgroundColor: '#ec4899',
+                            pointHoverBackgroundColor: '#3b82f6',
                         }]
                     },
                     options: {
