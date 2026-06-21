@@ -13,8 +13,8 @@ class ProductSKU(models.Model):
     target_url = models.URLField(max_length=1024, blank=True)
     
     # Pricing Rules
-    base_cost = models.DecimalField(max_digits=10, decimal_places=2, help_text="Seller's actual cost")
-    floor_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Minimum allowable selling price")
+    base_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Seller's actual cost")
+    floor_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Minimum allowable selling price")
     
     # State
     is_active = models.BooleanField(default=True)

@@ -38,7 +38,7 @@ class DashboardView(LoginRequiredMixin, ListView):
         breaches = 0
         for sku in active_skus:
             latest_buybox = CompetitorPriceLog.objects.filter(product_sku=sku, has_buybox=True).order_by('-timestamp').first()
-            if latest_buybox and latest_buybox.final_price < sku.floor_price:
+            if latest_buybox and sku.floor_price is not None and latest_buybox.final_price < sku.floor_price:
                 breaches += 1
                 
         # Count unique competitors
@@ -111,7 +111,24 @@ class SKUSyncView(LoginRequiredMixin, View):
 class AddSKUView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         url = request.POST.get('url', '').strip()
-        floor_price = 0  # Automatically defaulted for now
+        base_cost_raw = request.POST.get('base_cost', '').strip()
+        floor_price_raw = request.POST.get('floor_price', '').strip()
+        
+        base_cost = None
+        if base_cost_raw:
+            try:
+                base_cost = float(base_cost_raw)
+            except ValueError:
+                messages.error(request, "Invalid base cost value.")
+                return redirect('dashboard')
+                
+        floor_price = None
+        if floor_price_raw:
+            try:
+                floor_price = float(floor_price_raw)
+            except ValueError:
+                messages.error(request, "Invalid floor price value.")
+                return redirect('dashboard')
         
         if not url:
             messages.error(request, "URL is required.")
@@ -150,7 +167,7 @@ class AddSKUView(LoginRequiredMixin, View):
             pid=pid,
             lid=lid,
             target_url=url,
-            base_cost=0,
+            base_cost=base_cost,
             floor_price=floor_price
         )
         
@@ -305,7 +322,7 @@ class AnalyticsView(LoginRequiredMixin, View):
                                 else:
                                     # We are higher
                                     target_price = lowest_competitor.final_price
-                                    if target_price >= sku.floor_price:
+                                    if sku.floor_price is None or target_price >= sku.floor_price:
                                         status = "Overpriced"
                                         recommendation = f"Lower price by ₹{price_difference} to ₹{target_price} to compete for the Buy Box."
                                     else:

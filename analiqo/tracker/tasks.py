@@ -70,7 +70,7 @@ def fetch_single_sku(sku_id):
                 our_seller_log = log
             
             # 3. Analyze against rules (Undercutting Alert)
-            if is_buybox_winner and log.final_price < sku.floor_price:
+            if is_buybox_winner and sku.floor_price is not None and log.final_price < sku.floor_price:
                 dispatch_undercut_alert(sku, log)
 
         # 4. Check for Buy Box Lost alert

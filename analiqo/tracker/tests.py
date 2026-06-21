@@ -135,4 +135,42 @@ class SellerAnalyticsTestCase(TestCase):
             self.assertEqual(alerts.count(), 1)
             self.assertIn('lost the Buy Box', alerts.first().message)
 
+    def test_add_sku_optional_fields(self):
+        from unittest.mock import patch
+        url = reverse('add_sku')
+        
+        # Mock fetch_sellers
+        mocked_response = [
+            {'seller_name': 'SellerA', 'seller_id': 's1', 'seller_rating': 4.0, 'final_price': 200.00, 'mrp': 250.00, 'is_selected': True}
+        ]
+        
+        # 1. Add SKU with blank optional fields
+        with patch('tracker.services.FlipkartScraper.fetch_sellers', return_value=mocked_response):
+            response = self.client.post(url, {
+                'url': 'https://www.flipkart.com/some-product/p/itm123?pid=TESTPIDXYZ123&lid=LSTTESTLIDXYZ123',
+                'base_cost': '',
+                'floor_price': ''
+            })
+            self.assertEqual(response.status_code, 302)
+            
+            # Check created SKU
+            new_sku = ProductSKU.objects.get(pid='TESTPIDXYZ123')
+            self.assertIsNone(new_sku.base_cost)
+            self.assertIsNone(new_sku.floor_price)
+            
+        # 2. Add SKU with specified optional fields
+        with patch('tracker.services.FlipkartScraper.fetch_sellers', return_value=mocked_response):
+            response = self.client.post(url, {
+                'url': 'https://www.flipkart.com/some-product/p/itm456?pid=TESTPIDXYZ456&lid=LSTTESTLIDXYZ456',
+                'base_cost': '150.00',
+                'floor_price': '180.00'
+            })
+            self.assertEqual(response.status_code, 302)
+            
+            # Check created SKU
+            new_sku_2 = ProductSKU.objects.get(pid='TESTPIDXYZ456')
+            self.assertEqual(float(new_sku_2.base_cost), 150.00)
+            self.assertEqual(float(new_sku_2.floor_price), 180.00)
+
+
 

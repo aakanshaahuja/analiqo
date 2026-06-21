@@ -64,14 +64,14 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Pricing Health Status Card -->
         <div class="solid-panel rounded-2xl p-6 relative overflow-hidden transition-all duration-300 hover:shadow-md border-l-4 
-            {% if detailed_sellers.0.final_price < sku.floor_price %}border-l-red-500 bg-red-50/20
+            {% if sku.floor_price is not None and detailed_sellers.0.final_price < sku.floor_price %}border-l-red-500 bg-red-50/20
             {% elif not detailed_sellers.0.has_buybox %}border-l-yellow-500 bg-yellow-50/20
             {% else %}border-l-emerald-500 bg-emerald-50/20{% endif %}">
             <div class="flex justify-between items-start">
                 <div>
                     <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">Pricing Health</p>
                     <h3 class="text-2xl font-display font-extrabold">
-                        {% if detailed_sellers.0.final_price < sku.floor_price %}
+                        {% if sku.floor_price is not None and detailed_sellers.0.final_price < sku.floor_price %}
                             <span class="text-red-600 font-extrabold">Breached</span>
                         {% elif not detailed_sellers.0.has_buybox %}
                             <span class="text-yellow-600 font-extrabold">Undercut</span>
@@ -81,11 +81,11 @@
                     </h3>
                 </div>
                 <div class="p-2 rounded-lg 
-                    {% if detailed_sellers.0.final_price < sku.floor_price %}bg-red-100 text-red-600
+                    {% if sku.floor_price is not None and detailed_sellers.0.final_price < sku.floor_price %}bg-red-100 text-red-600
                     {% elif not detailed_sellers.0.has_buybox %}bg-yellow-100 text-yellow-600
                     {% else %}bg-emerald-100 text-emerald-600{% endif %}">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        {% if detailed_sellers.0.final_price < sku.floor_price %}
+                        {% if sku.floor_price is not None and detailed_sellers.0.final_price < sku.floor_price %}
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         {% else %}
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -94,7 +94,7 @@
                 </div>
             </div>
             <p class="text-xs text-slate-600 mt-3 font-semibold">
-                {% if detailed_sellers.0.final_price < sku.floor_price %}
+                {% if sku.floor_price is not None and detailed_sellers.0.final_price < sku.floor_price %}
                     Competitor pricing has dropped below your floor price of ₹{{ sku.floor_price }}!
                 {% elif not detailed_sellers.0.has_buybox %}
                     You do not have the Buy Box, but lowest competitor is above floor.
@@ -109,7 +109,9 @@
             <div class="flex justify-between items-start">
                 <div>
                     <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">Your Base Cost</p>
-                    <h3 class="text-3xl font-display font-extrabold text-slate-900">₹{{ sku.base_cost }}</h3>
+                    <h3 class="text-3xl font-display font-extrabold text-slate-900">
+                        {% if sku.base_cost is not None %}₹{{ sku.base_cost }}{% else %}—{% endif %}
+                    </h3>
                 </div>
                 <div class="p-3 bg-slate-50 text-slate-500 rounded-xl">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +127,9 @@
             <div class="flex justify-between items-start">
                 <div>
                     <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1">Your Floor Price</p>
-                    <h3 class="text-3xl font-display font-extrabold text-slate-900">₹{{ sku.floor_price }}</h3>
+                    <h3 class="text-3xl font-display font-extrabold text-slate-900">
+                        {% if sku.floor_price is not None %}₹{{ sku.floor_price }}{% else %}—{% endif %}
+                    </h3>
                 </div>
                 <div class="p-3 bg-brand-50 rounded-xl text-brand-500">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -384,14 +388,14 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-bold text-slate-800 mb-2">Base Cost (₹)</label>
-                            <input type="number" name="base_cost" step="0.01" required value="{{ sku.base_cost }}"
+                            <input type="number" name="base_cost" step="0.01" value="{% if sku.base_cost is not None %}{{ sku.base_cost }}{% endif %}"
                                    class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-sm">
                             <p class="mt-2 text-[10px] font-semibold text-slate-500">Your actual product purchase price + shipping/handling overheads.</p>
                         </div>
 
                         <div class="mb-4">
                             <label class="block text-sm font-bold text-slate-800 mb-2">Floor Price (₹)</label>
-                            <input type="number" name="floor_price" step="0.01" required value="{{ sku.floor_price }}"
+                            <input type="number" name="floor_price" step="0.01" value="{% if sku.floor_price is not None %}{{ sku.floor_price }}{% endif %}"
                                    class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all shadow-sm">
                             <p class="mt-2 text-[10px] font-semibold text-slate-500">Minimum allowed selling price. Alerts trigger when competitors breach this floor.</p>
                         </div>
